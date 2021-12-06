@@ -14,12 +14,12 @@ int main ()
 {
   // Reading stored pointcloud of pointXYZ in cloud variable
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
-  if (pcl::io::loadPCDFile<pcl::PointXYZ> ("/home/pinak/PCL/test_pcd5.pcd", *cloud) == -1) //* load the file
+  if (pcl::io::loadPCDFile<pcl::PointXYZ> ("test_pcd3.pcd", *cloud) == -1) //* load the file
   {
     PCL_ERROR ("Couldn't read file test_pcd.pcd \n");
     return (-1);
   }
-  std::cout<<"Loaded "<<cloud->width*cloud->height<<"data points from test_pcd4.pcd"<< std::endl;
+  std::cout<<"Loaded "<<cloud->width*cloud->height<<"data points from test_pcd3.pcd"<< std::endl;
  
   //Finding the Eigen vectors of the original pointcloud
   pcl::PCA<pcl::PointXYZ> pca;
@@ -45,7 +45,7 @@ int main ()
   feature_extractor.compute();
   feature_extractor.getEigenVectors(major_vector,middle_vector,minor_vector);
   cout<<"origin vector:"<<middle_vector<<major_vector<<minor_vector<<endl;
- 
+  
   //Deciding the axis of symmetry through dot product
   Eigen::Vector3f view(0,0,-1);
   Eigen::Vector3f axis;  // The selected axis
@@ -58,12 +58,12 @@ int main ()
   {
     axis = major_vector;
     //select_axis = 1;
-  }
+  } 
   else if(dot2<dot3)
   {
     axis = minor_vector;
     //select_axis = 2;
-  }
+  } 
   else{
     axis = middle_vector;
     //select_axis = 3;
@@ -81,14 +81,14 @@ int main ()
   pcl::transformPointCloud(*orientedGolden, *outputpcl, transform);
 
 
-  // Create a set of planar coefficients with X=Y=0,Z=1
+  // Create a set of planar coefficients with X=Y=0,Z=1, projection on front surface
   pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients ());
   coefficients->values.resize (4);
   coefficients->values[0] = coefficients->values[1] = 0;
   coefficients->values[2] = 1;
   coefficients->values[3] = -1;
 
-  // Create a set of planar coefficients with X=1, Y=0,Z=0
+  // Create a set of planar coefficients with X=0, Y=1,Z=0, projection on top surface
   pcl::ModelCoefficients::Ptr coefficients2 (new pcl::ModelCoefficients ());
   coefficients2->values.resize (4);
   coefficients2->values[0] = 0;
@@ -96,7 +96,7 @@ int main ()
   coefficients2->values[2] = 0;
   coefficients2->values[3] = -1;
 
-  // Create the filtering object
+  // Create the filtering object z direction
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_projected (new pcl::PointCloud<pcl::PointXYZ>);
   pcl::ProjectInliers<pcl::PointXYZ> proj;
   proj.setModelType (pcl::SACMODEL_PLANE);
@@ -104,92 +104,52 @@ int main ()
   proj.setModelCoefficients (coefficients);
   proj.filter (*cloud_projected);
 
-  // Create the filtering object x direction
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_projected_x (new pcl::PointCloud<pcl::PointXYZ>);
+  // Create the filtering object y direction
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_projected_y (new pcl::PointCloud<pcl::PointXYZ>);
   pcl::ProjectInliers<pcl::PointXYZ> proj3;
   proj3.setModelType (pcl::SACMODEL_PLANE);
   proj3.setInputCloud (orientedGolden);
   proj3.setModelCoefficients (coefficients2);
-  proj3.filter (*cloud_projected_x);
+  proj3.filter (*cloud_projected_y);
 
- 
-    float max_z = INT_MIN;
-    float min_z = INT_MAX;
-    float max_y = INT_MIN;
-    float max_x = INT_MIN;
-    for (const auto& pointa: *orientedGolden){
-        // cout<<"z_max:"<<pointa.z<<endl;
-        if(pointa.z>max_z)
-        {
+  
+  float max_y = INT_MIN;
+  float max_x = INT_MIN;
+  float max_z = INT_MIN;
+  float min_z = INT_MAX;
+  for (const auto& pointa: *orientedGolden){
+    // cout<<"z_max:"<<pointa.z<<endl;
+      if(pointa.z>max_z){
         max_z = pointa.z;
-        }
-        if(pointa.z<min_z){
-            min_z = pointa.z;
-        }
-        if(pointa.y>max_y)
-          max_y = pointa.y;
-        if(pointa.x>max_x)
-          max_x = pointa.x;
-
+      }
+      if(pointa.z<min_z){
+          min_z = pointa.z;
+      }
+      if(pointa.y>max_y)
+        max_y = pointa.y;
+      if(pointa.x>max_x)
+        max_x = pointa.x;
     }
-    cout<<"MAX_Z:"<<max_z<<endl;
-    cout<<"MIN_Z:"<<min_z<<endl;
+  cout<<"MAX_Z:"<<max_z<<endl;
+  cout<<"MIN_Z:"<<min_z<<endl;
 
-    // Rotated point cloud on origin - y value
-    float max_y2 = INT_MIN;
-    float max_x2 = INT_MIN;
-    float max_z2 = INT_MIN;
-    float min_z2 = INT_MAX;
-    // float max_y2 = INT_MIN;
-    for (const auto& pointn: *outputpcl){
-        // cout<<"y2_max_origin:"<<pointn.y<<endl;
-        if(pointn.y>max_y2)
-          max_y2 = pointn.y;
-        if(pointn.z>max_z2)
-          max_z2 = pointn.z;
-        if(pointn.z<min_z2)
-          min_z2 = pointn.z;
-        if(pointn.x>max_x2)
-          max_x2 = pointn.x;
-       
-    }
-
-    float max_ys = INT_MIN;
-    float max_xs = INT_MIN;
-    float min_ys = INT_MAX;
-    float min_xs = INT_MAX;
-    for (const auto& points: *cloud_projected){
-      // cout<<"z_max:"<<pointa.z<<endl;
-      if(points.y>max_ys)
-        max_ys = points.y;
-      if(points.y<min_ys)
-        min_ys = points.y;
-      if(points.x>max_xs)
-        max_xs = points.x;
-      if(points.x<min_xs)
-        min_xs = points.x;
-
-    }
-
-
-    float max_zt = INT_MIN;
-    float max_xt = INT_MIN;
-    float min_zt = INT_MAX;
-    float min_xt = INT_MAX;
-    for (const auto& pointt: *cloud_projected_x){
-      // cout<<"z_max:"<<pointa.z<<endl;
-      if(pointt.z>max_zt)
-        max_zt = pointt.z;
-      if(pointt.z<min_zt)
-        min_zt = pointt.z;
-      if(pointt.x>max_xt)
-        max_xt = pointt.x;
-      if(pointt.x<min_xt)
-        min_xt = pointt.x;
-
-    }
-
-
+  // Rotated point cloud on origin - y value
+  float max_y2 = INT_MIN;
+  float max_x2 = INT_MIN;
+  float max_z2 = INT_MIN;
+  float min_z2 = INT_MAX;
+  // float max_y2 = INT_MIN;
+  for (const auto& pointn: *outputpcl){
+      // cout<<"y2_max_origin:"<<pointn.y<<endl;
+      if(pointn.y>max_y2)
+        max_y2 = pointn.y;
+      if(pointn.z>max_z2)
+        max_z2 = pointn.z;
+      if(pointn.z<min_z2)
+        min_z2 = pointn.z;
+      if(pointn.x>max_x2)
+        max_x2 = pointn.x;     
+  }
 
  
     cout<<"MAX_x:"<<max_x<<endl;
@@ -213,7 +173,7 @@ int main ()
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr offsetcloud(new pcl::PointCloud<pcl::PointXYZ>);
   pcl::PointCloud<pcl::PointXYZ>::Ptr rot_cloud_projected (new pcl::PointCloud<pcl::PointXYZ>);
-  pcl::PointCloud<pcl::PointXYZ>::Ptr rot_cloud_projected_x (new pcl::PointCloud<pcl::PointXYZ>);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr rot_cloud_projected_y (new pcl::PointCloud<pcl::PointXYZ>);
   //Visualisation of the cloud
   pcl::visualization::PCLVisualizer viewer ("Simple pointcloud display example");
   pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> source_cloud_color_handler (cloud, 255, 20, 25); //Red
@@ -221,17 +181,17 @@ int main ()
   pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> source_cloud_color_handler3 (outputpcl, 20, 255, 20); //Green
   pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> source_cloud_color_handler4 (offsetcloud, 200, 200, 200); // White
   pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> source_cloud_projected (cloud_projected, 200, 200, 0); // Orange
-  pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> source_cloud_projected_x (cloud_projected_x, 100, 100, 0); // Orange
+  pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> source_cloud_projected_x (cloud_projected_y, 100, 100, 0); // Orange
   pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> source_cloud_rot_projected (rot_cloud_projected, 200, 0, 100); // RedBlue
-  pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> source_cloud_rot_projected_x (rot_cloud_projected_x, 100, 0, 100); // RedBlue
+  pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> source_cloud_rot_projected_x (rot_cloud_projected_y, 100, 0, 100); // RedBlue
   viewer.addPointCloud (cloud, source_cloud_color_handler, "original_cloud");
   viewer.addPointCloud (orientedGolden, source_cloud_color_handler2, "original2_cloud");
   viewer.addPointCloud (outputpcl, source_cloud_color_handler3, "original3_cloud");
   viewer.addPointCloud (offsetcloud, source_cloud_color_handler4, "original4_cloud");
   viewer.addPointCloud (cloud_projected, source_cloud_projected, "projected_cloud");
-  viewer.addPointCloud (cloud_projected_x, source_cloud_projected_x, "projected_cloud_x");
+  viewer.addPointCloud (cloud_projected_y, source_cloud_projected_x, "projected_cloud_y");
   viewer.addPointCloud (rot_cloud_projected, source_cloud_rot_projected, "rot_projected_cloud");
-  viewer.addPointCloud (rot_cloud_projected_x, source_cloud_rot_projected_x, "rot_projected_cloud_x");
+  viewer.addPointCloud (rot_cloud_projected_y, source_cloud_rot_projected_x, "rot_projected_cloud_y");
   // viewer.addPointCloudNormals<pcl::PointXYZ, pcl::Normal> (cloud, cloud_normals, 10, 0.05, "normals");
   viewer.addCoordinateSystem (0.5, "cloud", 0);
   viewer.setBackgroundColor(0.05, 0.05, 0.05, 0); // Setting background to a dark grey
@@ -240,45 +200,41 @@ int main ()
   viewer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "original2_cloud");
   viewer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "original3_cloud");
   viewer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "original4_cloud");
- 
+  
   // Logic for translation and rotation of selected axis
   int count=0;
-  int flag = 0;
   float offset = 0;
   float max_offset = 0;
   if (max_z2>max_z)
         max_offset = (-(max_z-min_z));
     else{
         max_offset = max_z-min_z;
-        // max_offset = 0.1;
     }
   theta = 0;//-1*((20*M_PI)/180);
   Eigen::Affine3f transform2 = Eigen::Affine3f::Identity();
   while (!viewer.wasStopped ()) { // Display the visualiser until 'q' key is pressed
     viewer.spinOnce (1);  
-    if(max_offset<0 && offset>max_offset && flag==0){
-        offset += -0.001;
-        cout<<"decr"<<endl;
-    } else if(max_offset>0 && offset<max_offset && flag==0){
-        offset += 0.001;
-        cout<<"incr"<<endl;
+    if(max_offset<0 && offset>max_offset){
+        offset += -0.00001;
+    } else if(max_offset>0 && offset<max_offset){
+        offset += 0.00001;
     } else{
         count=1;
-        // cout<<"We here folks!!"<<endl;
+        cout<<"We here folks!!"<<endl;
     }
-    transform2.translation()<<0,-(max_y2-max_y),offset;
-    theta = -20;
+    transform2.translation()<<0,-1*(max_y2-max_y),offset;
+    theta = 0;
     while (theta<(20) && count==0){
-      // cout<<"in"<<offset<<endl;
+      // cout<<"in"<<endl;
       transform2.rotate (Eigen::AngleAxisf ((theta*M_PI/180), Eigen::Vector3f::UnitY()));
       // std::cout<<transform2.matrix() <<std::endl;
       // std::cout<<"-----------------"<<std::endl;
-     
+      
       // Create the filtering object
-     
+      
       pcl::transformPointCloud(*outputpcl, *offsetcloud, transform2);
       viewer.updatePointCloud(offsetcloud,"original4_cloud");
-     
+      
       pcl::ProjectInliers<pcl::PointXYZ> rot_proj;
       rot_proj.setModelType (pcl::SACMODEL_PLANE);
       rot_proj.setInputCloud (offsetcloud);
@@ -290,75 +246,15 @@ int main ()
       rot_proj_x.setModelType (pcl::SACMODEL_PLANE);
       rot_proj_x.setInputCloud (offsetcloud);
       rot_proj_x.setModelCoefficients (coefficients2);
-      rot_proj_x.filter (*rot_cloud_projected_x);
-      viewer.updatePointCloud(rot_cloud_projected_x,"rot_projected_cloud_x");
+      rot_proj_x.filter (*rot_cloud_projected_y);
+      viewer.updatePointCloud(rot_cloud_projected_y,"rot_projected_cloud_y");
 
-      float max_yp = INT_MIN;
-      float max_xp = INT_MIN;
-      float min_yp = INT_MAX;
-      float min_xp = INT_MAX;
-      for (const auto& pointp: *rot_cloud_projected){
-        // cout<<"z_max:"<<pointa.z<<endl;
-        if(pointp.y>max_yp)
-          max_yp = pointp.y;
-        if(pointp.y<min_yp)
-          min_yp = pointp.y;
-        if(pointp.x>max_xp)
-          max_xp = pointp.x;
-        if(pointp.x<min_xp)
-          min_xp = pointp.x;
-
-    }
-
-    cout<<"max side y:"<<abs(max_yp-max_ys)<<endl;
-    cout<<"max side x:"<<abs(max_xp-max_xs)<<endl;
-      float max_zp2 = INT_MIN;
-      float max_xp2 = INT_MIN;
-      float min_zp2 = INT_MAX;
-      float min_xp2 = INT_MAX;
-      for (const auto& pointp2: *rot_cloud_projected_x){
-        // cout<<"z_max:"<<pointa.z<<endl;
-        if(pointp2.z>max_zp2)
-          max_zp2 = pointp2.z;
-        if(pointp2.z<min_zp2)
-          min_zp2 = pointp2.z;
-        if(pointp2.x>max_xp2)
-          max_xp2 = pointp2.x;
-        if(pointp2.x<min_xp2)
-          min_xp2 = pointp2.x;
-
-    }
-    cout<<"max top z:"<<abs(max_zp2-max_zt)<<endl;
-    cout<<"max top x:"<<abs(max_xp2-max_xt)<<endl;
-    // abs(max_zp2-max_zt)<0.01 &&
-
-    bool con1,con2,con3;
-    if(max_offset<0){
-      con1 = max_zt>max_zp2;
-      con2 = min_zt>min_zp2;
-      con3 = (min_zt-max_zp2)<0.02;
-      
-    }
-    else{
-      con1 = max_zt<max_zp2;
-      con2 = min_zt<min_zp2;
-      con3 = (min_zp2-max_zt)>-0.015;
-    }
-
-    cout<<"dekho:"<<con1<<" "<<con2<<" "<<con3<<endl;
-    if(abs(max_xp2-max_xt)<0.01 && abs(max_xp-max_xs)<0.01 
-    && abs(min_xp-min_xs)<0.01 && abs(min_xp2-min_xt)<0.01 && abs(abs(max_zt-max_zp2)-abs(min_zt-min_zp2))<0.0001 && con1 && con2 && con3){
-      cout<<"found"<<endl;
-      flag =1;
-      break;
-
-    }
       theta+= 1;
     }
     pcl::transformPointCloud(*outputpcl, *offsetcloud, transform2);
     viewer.updatePointCloud(offsetcloud,"original4_cloud");
 
-   
+    
   }
   return (0);
 }
@@ -398,7 +294,7 @@ int main ()
 // for(auto pointc1:*orientedGolden){
 //     for(auto pointc2:*offsetcloud){
 //       // std::vector<float> vec1={pointc1.x,pointc1.y,pointc1.z},vec2={pointc2.x,pointc2.y,pointc2.z};
-       
+        
 //       if(pointc1.x==pointc2.x && pointc1.y==pointc2.y){
 //         cout<<"dekh:"<<pointc1.x<<" "<<pointc2.x<<endl;
 //         val++;
