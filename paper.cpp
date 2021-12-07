@@ -240,7 +240,7 @@ int main ()
   return (0);
 }
 
-// Lol
+// Lol again
 
 // ------- Calculating Normals for the read pointcloud --------
 // pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
