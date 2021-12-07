@@ -207,7 +207,7 @@ int main ()
         count=1;
         cout<<"We here folks!!"<<endl;
     }
-    transform2.translation()<<0,0,offset;
+    transform2.translation()<<0,-1*(max_y2-max_y),offset;
     theta = 0;
     while (theta<(20) && count==0){
       // cout<<"in"<<endl;
