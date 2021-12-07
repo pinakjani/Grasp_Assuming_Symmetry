@@ -1,0 +1,3 @@
+/home/wael/dr_project/Grasp_Assuming_Symmetry/build/CMakeFiles/rebuild_cache.dir
+/home/wael/dr_project/Grasp_Assuming_Symmetry/build/CMakeFiles/edit_cache.dir
+/home/wael/dr_project/Grasp_Assuming_Symmetry/build/CMakeFiles/paper.dir

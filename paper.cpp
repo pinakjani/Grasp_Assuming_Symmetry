@@ -14,7 +14,7 @@ int main ()
 {
   // Reading stored pointcloud of pointXYZ in cloud variable
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
-  if (pcl::io::loadPCDFile<pcl::PointXYZ> ("test_pcd3.pcd", *cloud) == -1) //* load the file
+  if (pcl::io::loadPCDFile<pcl::PointXYZ> ("../test_pcd3.pcd", *cloud) == -1) //* load the file
   {
     PCL_ERROR ("Couldn't read file test_pcd.pcd \n");
     return (-1);
@@ -156,21 +156,6 @@ int main ()
     cout<<"MAX_y:"<<max_y<<endl;
     cout<<"MAX_x2:"<<max_x2<<endl;
 
-
-
-
-   
-
-
-
-
-
-
-
-
-
-
-
   pcl::PointCloud<pcl::PointXYZ>::Ptr offsetcloud(new pcl::PointCloud<pcl::PointXYZ>);
   pcl::PointCloud<pcl::PointXYZ>::Ptr rot_cloud_projected (new pcl::PointCloud<pcl::PointXYZ>);
   pcl::PointCloud<pcl::PointXYZ>::Ptr rot_cloud_projected_y (new pcl::PointCloud<pcl::PointXYZ>);
@@ -222,15 +207,13 @@ int main ()
         count=1;
         cout<<"We here folks!!"<<endl;
     }
-    transform2.translation()<<0,-1*(max_y2-max_y),offset;
+    transform2.translation()<<0,0,offset;
     theta = 0;
     while (theta<(20) && count==0){
       // cout<<"in"<<endl;
       transform2.rotate (Eigen::AngleAxisf ((theta*M_PI/180), Eigen::Vector3f::UnitY()));
       // std::cout<<transform2.matrix() <<std::endl;
       // std::cout<<"-----------------"<<std::endl;
-      
-      // Create the filtering object
       
       pcl::transformPointCloud(*outputpcl, *offsetcloud, transform2);
       viewer.updatePointCloud(offsetcloud,"original4_cloud");
@@ -253,8 +236,6 @@ int main ()
     }
     pcl::transformPointCloud(*outputpcl, *offsetcloud, transform2);
     viewer.updatePointCloud(offsetcloud,"original4_cloud");
-
-    
   }
   return (0);
 }
