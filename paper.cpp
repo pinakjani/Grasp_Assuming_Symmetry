@@ -1,5 +1,8 @@
 #include <iostream>
 #include <pcl/io/pcd_io.h>
+#include <pcl/io/ply_io.h>
+#include <pcl/point_cloud.h>
+#include <pcl/console/parse.h>
 #include <pcl/point_types.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/visualization/pcl_visualizer.h>
@@ -10,16 +13,64 @@
 #include <pcl/features/moment_of_inertia_estimation.h>
 #include <vector>
 
-int main ()
+// This function displays the help
+void
+showHelp(char * program_name)
 {
+  std::cout << std::endl;
+  std::cout << "Usage: " << program_name << " cloud_filename.[pcd|ply]" << std::endl;
+  std::cout << "-h:  Show this help." << std::endl;
+}
+
+int main (int argc, char** argv)
+{
+  // Show help
+  if (pcl::console::find_switch (argc, argv, "-h") || pcl::console::find_switch (argc, argv, "--help")) {
+    showHelp (argv[0]);
+    return 0;
+  }
+  // Fetch point cloud filename in arguments | Works with PCD and PLY files
+  std::vector<int> filenames;
+  bool file_is_pcd = false;
+
+  filenames = pcl::console::parse_file_extension_argument (argc, argv, ".ply");
+
+  if (filenames.size () != 1)  {
+    filenames = pcl::console::parse_file_extension_argument (argc, argv, ".pcd");
+
+    if (filenames.size () != 1) {
+      showHelp (argv[0]);
+      return -1;
+    } else {
+      file_is_pcd = true;
+    }
+  }
+
+  // Load file | Works with PCD and PLY files
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ> ());
+
+  if (file_is_pcd) {
+    if (pcl::io::loadPCDFile (argv[filenames[0]], *cloud) < 0)  {
+      std::cout << "Error loading point cloud " << argv[filenames[0]] << std::endl << std::endl;
+      showHelp (argv[0]);
+      return -1;
+    }
+  } else {
+    if (pcl::io::loadPLYFile (argv[filenames[0]], *cloud) < 0)  {
+      std::cout << "Error loading point cloud " << argv[filenames[0]] << std::endl << std::endl;
+      showHelp (argv[0]);
+      return -1;
+    }
+  }
+
   // Reading stored pointcloud of pointXYZ in cloud variable
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
+  /*pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
   if (pcl::io::loadPCDFile<pcl::PointXYZ> ("../test_pcd3.pcd", *cloud) == -1) //* load the file
   {
     PCL_ERROR ("Couldn't read file test_pcd.pcd \n");
     return (-1);
   }
-  std::cout<<"Loaded "<<cloud->width*cloud->height<<"data points from test_pcd3.pcd"<< std::endl;
+  std::cout<<"Loaded "<<cloud->width*cloud->height<<"data points from test_pcd3.pcd"<< std::endl;*/
  
   //Finding the Eigen vectors of the original pointcloud
   pcl::PCA<pcl::PointXYZ> pca;
@@ -208,7 +259,7 @@ int main ()
         cout<<"We here folks!!"<<endl;
     }
     transform2.translation()<<0,-1*(max_y2-max_y),offset;
-    theta = 0;
+    theta = -20;
     while (theta<(20) && count==0){
       // cout<<"in"<<endl;
       transform2.rotate (Eigen::AngleAxisf ((theta*M_PI/180), Eigen::Vector3f::UnitY()));
