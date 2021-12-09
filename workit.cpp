@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 #include <pcl/io/pcd_io.h>
 #include <pcl/io/ply_io.h>
 #include <pcl/point_cloud.h>
@@ -241,6 +242,7 @@ int main (int argc, char** argv)
   int count=0;
   float offset = 0;
   float max_offset = 0;
+  std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> symmetry_clouds;
   if (max_z2>max_z)
         max_offset = (-(max_z-min_z));
     else{
@@ -251,20 +253,29 @@ int main (int argc, char** argv)
   while (!viewer.wasStopped ()) { // Display the visualiser until 'q' key is pressed
     viewer.spinOnce (1);  
     offset = 1;
-    transform2.rotate (Eigen::AngleAxisf (0, Eigen::Vector3f::UnitY()));
-    if(count==0){
-      transform2.rotate (Eigen::AngleAxisf ((-20*M_PI/180), Eigen::Vector3f::UnitY()));
+    while(count<20){
+      transform2.rotate (Eigen::AngleAxisf (0, Eigen::Vector3f::UnitY()));
+      if(theta==0){
+        transform2.rotate (Eigen::AngleAxisf ((-20*M_PI/180), Eigen::Vector3f::UnitY()));
+        pcl::transformPointCloud(*outputpcl, *offsetcloud, transform2);
+        viewer.updatePointCloud(offsetcloud,"original4_cloud");
+        theta = 1;
+      }
+      while(theta <= 40){
+      transform2.rotate (Eigen::AngleAxisf ((1*M_PI/180), Eigen::Vector3f::UnitY()));
       pcl::transformPointCloud(*outputpcl, *offsetcloud, transform2);
       viewer.updatePointCloud(offsetcloud,"original4_cloud");
-      count = 1;
+      symmetry_clouds.push_back(offsetcloud);
+      cout<<theta<<"   "<<count<<endl;
+      theta++;
+      }
+      cout<<theta<<"   "<<count<<" size:"<<symmetry_clouds.size()<<endl;
+      count++;
+      transform2.rotate (Eigen::AngleAxisf ((-40*M_PI/180), Eigen::Vector3f::UnitY()));
+      pcl::transformPointCloud(*outputpcl, *offsetcloud, transform2);
+      viewer.updatePointCloud(offsetcloud,"original4_cloud");
+      theta = 1;
     }
-    while(count <= 40){
-    transform2.rotate (Eigen::AngleAxisf ((1*M_PI/180), Eigen::Vector3f::UnitY()));
-    pcl::transformPointCloud(*outputpcl, *offsetcloud, transform2);
-    viewer.updatePointCloud(offsetcloud,"original4_cloud");
-    count++;
-    }
-    cout<<count<<endl;
     pcl::transformPointCloud(*outputpcl, *offsetcloud, transform2);
     viewer.updatePointCloud(offsetcloud,"original4_cloud");
   }
