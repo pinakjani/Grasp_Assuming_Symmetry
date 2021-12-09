@@ -252,9 +252,16 @@ int main (int argc, char** argv)
   Eigen::Affine3f transform2 = Eigen::Affine3f::Identity();
   while (!viewer.wasStopped ()) { // Display the visualiser until 'q' key is pressed
     viewer.spinOnce (1);  
-    offset = 1;
-    while(count<20){
-      transform2.rotate (Eigen::AngleAxisf (0, Eigen::Vector3f::UnitY()));
+    while(count<1){
+      if(max_offset<0 && offset>max_offset){
+        offset += -0.0001;
+      } else if(max_offset>0 && offset<max_offset){
+        offset += 0.0001;
+      } else{
+        count=1;
+        cout<<"We here folks!! size:"<<symmetry_clouds.size()<<endl;
+        break;
+      }
       if(theta==0){
         transform2.rotate (Eigen::AngleAxisf ((-20*M_PI/180), Eigen::Vector3f::UnitY()));
         pcl::transformPointCloud(*outputpcl, *offsetcloud, transform2);
@@ -266,18 +273,16 @@ int main (int argc, char** argv)
       pcl::transformPointCloud(*outputpcl, *offsetcloud, transform2);
       viewer.updatePointCloud(offsetcloud,"original4_cloud");
       symmetry_clouds.push_back(offsetcloud);
-      cout<<theta<<"   "<<count<<endl;
+      //cout<<theta<<"   "<<count<<endl;
       theta++;
       }
       cout<<theta<<"   "<<count<<" size:"<<symmetry_clouds.size()<<endl;
-      count++;
       transform2.rotate (Eigen::AngleAxisf ((-40*M_PI/180), Eigen::Vector3f::UnitY()));
+      transform2.translation()<<0,-1*(max_y2-max_y),offset;
       pcl::transformPointCloud(*outputpcl, *offsetcloud, transform2);
       viewer.updatePointCloud(offsetcloud,"original4_cloud");
       theta = 1;
     }
-    pcl::transformPointCloud(*outputpcl, *offsetcloud, transform2);
-    viewer.updatePointCloud(offsetcloud,"original4_cloud");
   }
   return (0);
 }
