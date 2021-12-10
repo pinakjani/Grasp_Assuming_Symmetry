@@ -208,11 +208,46 @@ int main (int argc, char** argv)
     cout<<"MAX_y:"<<max_y<<endl;
     cout<<"MAX_x2:"<<max_x2<<endl;
 
+      // Projected origin point cloud on z-axis
+  float max_ys = INT_MIN;
+  float max_xs = INT_MIN;
+  float min_ys = INT_MAX;
+  float min_xs = INT_MAX;
+  for (const auto& points: *cloud_projected){
+    // cout<<"z_max:"<<pointa.z<<endl;
+    if(points.y>max_ys)
+      max_ys = points.y;
+    if(points.y<min_ys)
+      min_ys = points.y;
+    if(points.x>max_xs)
+      max_xs = points.x;
+    if(points.x<min_xs)
+      min_xs = points.x;
+
+  }
+
+  // Projected origin point cloud on y-axis
+  float max_zt = INT_MIN;
+  float max_xt = INT_MIN;
+  float min_zt = INT_MAX;
+  float min_xt = INT_MAX;
+  for (const auto& pointt: *cloud_projected_y){
+    // cout<<"z_max:"<<pointa.z<<endl;
+    if(pointt.z>max_zt)
+      max_zt = pointt.z;
+    if(pointt.z<min_zt)
+      min_zt = pointt.z;
+    if(pointt.x>max_xt)
+      max_xt = pointt.x;
+    if(pointt.x<min_xt)
+      min_xt = pointt.x;
+  }  
+
   pcl::PointCloud<pcl::PointXYZ>::Ptr offsetcloud(new pcl::PointCloud<pcl::PointXYZ>);
   pcl::PointCloud<pcl::PointXYZ>::Ptr rot_cloud_projected (new pcl::PointCloud<pcl::PointXYZ>);
   pcl::PointCloud<pcl::PointXYZ>::Ptr rot_cloud_projected_y (new pcl::PointCloud<pcl::PointXYZ>);
   //Visualisation of the cloud
-  pcl::visualization::PCLVisualizer viewer ("Simple pointcloud display example");
+  pcl::visualization::PCLVisualizer viewer ("Transformations and projections pointclouds");
   pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> source_cloud_color_handler (cloud, 255, 20, 25); //Red
   pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> source_cloud_color_handler2 (orientedGolden, 20, 20, 255); //Blue
   pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> source_cloud_color_handler3 (outputpcl, 20, 255, 20); //Green
@@ -240,6 +275,7 @@ int main (int argc, char** argv)
   
   // Logic for translation and rotation of selected axis
   int count=0;
+  int cloud_counter=0;
   float offset = 0;
   float max_offset = 0;
   std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> symmetry_clouds;
@@ -268,11 +304,52 @@ int main (int argc, char** argv)
         viewer.updatePointCloud(offsetcloud,"original4_cloud");
         theta = 1;
       }
+      // Important loop. Generates clouds from -20 to 20 degrees for every translation
       while(theta <= 40){
       transform2.rotate (Eigen::AngleAxisf ((1*M_PI/180), Eigen::Vector3f::UnitY()));
       pcl::transformPointCloud(*outputpcl, *offsetcloud, transform2);
       viewer.updatePointCloud(offsetcloud,"original4_cloud");
-      symmetry_clouds.push_back(offsetcloud);
+
+      pcl::ProjectInliers<pcl::PointXYZ> rot_proj;
+      rot_proj.setModelType (pcl::SACMODEL_PLANE);
+      rot_proj.setInputCloud (offsetcloud);
+      rot_proj.setModelCoefficients (coefficients);
+      rot_proj.filter (*rot_cloud_projected);
+      viewer.updatePointCloud(rot_cloud_projected,"rot_projected_cloud");
+
+      pcl::ProjectInliers<pcl::PointXYZ> rot_proj_x;
+      rot_proj_x.setModelType (pcl::SACMODEL_PLANE);
+      rot_proj_x.setInputCloud (offsetcloud);
+      rot_proj_x.setModelCoefficients (coefficients2);
+      rot_proj_x.filter (*rot_cloud_projected_y);
+
+      // Projected rotated point cloud on z-axis computed for every rotation
+      float max_yp = INT_MIN;
+      float max_xp = INT_MIN;
+      float min_yp = INT_MAX;
+      float min_xp = INT_MAX;
+      for (const auto& pointp: *rot_cloud_projected){
+        // cout<<"z_max:"<<pointa.z<<endl;
+        if(pointp.y>max_yp)
+          max_yp = pointp.y;
+        if(pointp.y<min_yp)
+          min_yp = pointp.y;
+        if(pointp.x>max_xp)
+          max_xp = pointp.x;
+        if(pointp.x<min_xp)
+          min_xp = pointp.x;
+      }
+      cout<<max_xp<<" "<<min_xp<<" "<<max_yp<<" "<<min_yp<<" "<<endl;
+      cout<<max_xs<<" "<<min_xs<<" "<<max_ys<<" "<<min_ys<<" "<<endl;
+      // s - segmented, p - projected
+      if(max_xp>=max_xs || max_yp>=max_ys){
+        //cout<<"Out of segmentation mask "<<cloud_counter++<<endl;
+      } else {
+        cout<<"---------------------found--------------------- "<<endl;
+        symmetry_clouds.push_back(offsetcloud);
+      }
+
+      
       //cout<<theta<<"   "<<count<<endl;
       theta++;
       }
