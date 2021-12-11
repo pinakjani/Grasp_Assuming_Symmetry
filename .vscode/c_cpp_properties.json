@@ -10,16 +10,22 @@
         "/home/shivam/ws_moveit/devel/include/**",
         "/opt/ros/noetic/include/**",
         "/home/shivam/catkin_ws/src/ros_controllers/ackermann_steering_controller/include/**",
+<<<<<<< HEAD
         "/home/shivam/catkin_ws/src/convenience-pkgs/arm_components_name_manager/include/**",
         "/home/shivam/catkin_ws/src/convenience-pkgs/baselib_binding/include/**",
         "/home/shivam/catkin_ws/src/beginner_tutorials/include/**",
         "/home/shivam/ws_moveit/src/moveit/moveit_planners/chomp/chomp_motion_planner/include/**",
         "/home/shivam/catkin_ws/src/convenience-pkgs/convenience_math_functions/include/**",
         "/home/shivam/catkin_ws/src/convenience-pkgs/convenience_ros_functions/include/**",
+=======
+        "/home/shivam/catkin_ws/src/beginner_tutorials/include/**",
+        "/home/shivam/ws_moveit/src/moveit/moveit_planners/chomp/chomp_motion_planner/include/**",
+>>>>>>> master
         "/home/shivam/catkin_ws/src/ros_controllers/diff_drive_controller/include/**",
         "/home/shivam/catkin_ws/src/ros_controllers/effort_controllers/include/**",
         "/home/shivam/catkin_ws/src/ros_controllers/force_torque_sensor_controller/include/**",
         "/home/shivam/catkin_ws/src/ros_controllers/forward_command_controller/include/**",
+<<<<<<< HEAD
         "/home/shivam/catkin_ws/src/gazebo-pkgs/gazebo_grasp_plugin/include/**",
         "/home/shivam/catkin_ws/src/joint-control-pkgs/gazebo_joint_control/include/**",
         "/home/shivam/catkin_ws/src/gazebo-pkgs/gazebo_state_plugins/include/**",
@@ -39,6 +45,15 @@
         "/home/shivam/catkin_ws/src/moveit-pkgs/moveit_object_handling/include/**",
         "/home/shivam/ws_moveit/src/moveit/moveit_planners/chomp/chomp_interface/include/**",
         "/home/shivam/catkin_ws/src/moveit-pkgs/moveit_planning_helper/include/**",
+=======
+        "/home/shivam/ws_moveit/src/geometric_shapes/include/**",
+        "/home/shivam/catkin_ws/src/ros_controllers/gripper_action_controller/include/**",
+        "/home/shivam/catkin_ws/src/ros_controllers/imu_sensor_controller/include/**",
+        "/home/shivam/catkin_ws/src/ros_controllers/joint_state_controller/include/**",
+        "/home/shivam/catkin_ws/src/ros_controllers/joint_trajectory_controller/include/**",
+        "/home/shivam/catkin_ws/src/learning_tf2/include/**",
+        "/home/shivam/ws_moveit/src/moveit/moveit_planners/chomp/chomp_interface/include/**",
+>>>>>>> master
         "/home/shivam/ws_moveit/src/moveit_resources/prbt_ikfast_manipulator_plugin/include/**",
         "/home/shivam/ws_moveit/src/moveit/moveit_ros/benchmarks/include/**",
         "/home/shivam/ws_moveit/src/moveit/moveit_plugins/moveit_ros_control_interface/include/**",
@@ -50,7 +65,11 @@
         "/home/shivam/ws_moveit/src/moveit/moveit_plugins/moveit_simple_controller_manager/include/**",
         "/home/shivam/ws_moveit/src/moveit_visual_tools/include/**",
         "/home/shivam/catkin_ws/src/my_robo/include/**",
+<<<<<<< HEAD
         "/home/shivam/catkin_ws/src/general-message-pkgs/object_msgs_tools/include/**",
+=======
+        "/home/shivam/catkin_ws/src/pcl_tutorial/include/**",
+>>>>>>> master
         "/home/shivam/ws_moveit/src/moveit/moveit_planners/pilz_industrial_motion_planner/include/**",
         "/home/shivam/ws_moveit/src/moveit/moveit_planners/pilz_industrial_motion_planner_testutils/include/**",
         "/home/shivam/catkin_ws/src/ros_controllers/position_controllers/include/**",

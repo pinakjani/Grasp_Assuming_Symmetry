@@ -1,7 +1,19 @@
 {
+<<<<<<< HEAD
+=======
+    "ros.distro": "noetic",
+>>>>>>> master
     "python.autoComplete.extraPaths": [
         "/home/shivam/catkin_ws/devel/lib/python3/dist-packages",
         "/home/shivam/ws_moveit/devel/lib/python3/dist-packages",
         "/opt/ros/noetic/lib/python3/dist-packages"
+<<<<<<< HEAD
+=======
+    ],
+    "python.analysis.extraPaths": [
+        "/home/shivam/catkin_ws/devel/lib/python3/dist-packages",
+        "/home/shivam/ws_moveit/devel/lib/python3/dist-packages",
+        "/opt/ros/noetic/lib/python3/dist-packages"
+>>>>>>> master
     ]
 }
