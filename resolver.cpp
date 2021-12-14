@@ -15,7 +15,7 @@
 #include <chrono>
 #include <thread>
 
-int viewer_script (std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> simulation_clouds)
+int viewer_script (std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> simulation_clouds, std::vector<int> angles)
 {
 int i =0;
 std::string path= "/home/pinak/PCL/PCD/test";
@@ -59,10 +59,12 @@ std::string path= "/home/pinak/PCL/PCD/test";
         viewer.spinOnce(2);
         if(i<simulation_clouds.size()){
             offsetcloud = simulation_clouds[i];
-            cout<<"PCD"+std::to_string(i)<<endl;
+            cout<<"PCD "+std::to_string(i)<<" has angle "<<angles[i]<<endl;
             viewer.updatePointCloud(offsetcloud,"original4_cloud");
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
             i++;
+        } else{
+          return (0);
         }
 
  }
@@ -259,7 +261,8 @@ int main (int argc, char** argv)
   pcl::PointCloud<pcl::PointXYZ>::Ptr rot_cloud_projected_y (new pcl::PointCloud<pcl::PointXYZ>);
   
   //Storage for all hypothesis clouds
-  std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> symmetry_clouds; 
+  std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> symmetry_clouds;
+  std::vector<int> cloud_angles;
   
   // Logic for translation and rotation of selected axis
   int count=0;
@@ -273,7 +276,8 @@ int main (int argc, char** argv)
     }
   theta = 0; // Unused at the moment
   symmetry_clouds.push_back(outputpcl); // Storing the original rotated cloud in first place
-  
+  cloud_angles.push_back(0);
+
   while(1)
   {
     if(max_offset<0 && offset>max_offset){
@@ -298,6 +302,7 @@ int main (int argc, char** argv)
       cout<<"first point of rotation"<<endl; 
       std::cout << transform2.matrix() << std::endl;
       symmetry_clouds.push_back(offsetcloud);
+      cloud_angles.push_back(-20);
       transfercloud = offsetcloud;
       count++;
     }
@@ -313,6 +318,7 @@ int main (int argc, char** argv)
       std::cout << transform3.matrix() << std::endl;
       //if(count==1)
       symmetry_clouds.push_back(temp_cloud);
+      cloud_angles.push_back(count-20);
       cout<<count<<" size"<<symmetry_clouds.size()<<endl;
       count++;
     }
@@ -325,6 +331,7 @@ int main (int argc, char** argv)
     outputpcl = trans_temp_cloud;  // Under Scrutiny
     pcl::io::savePCDFileASCII ("afterT", *outputpcl);
     symmetry_clouds.push_back(outputpcl);
+    cloud_angles.push_back(0);
     cout<<count<<" size"<<symmetry_clouds.size()<<endl;
   }
 
@@ -339,16 +346,16 @@ int main (int argc, char** argv)
   pcl::io::savePCDFileASCII ("testlast2.pcd", *symmetry_clouds[symmetry_clouds.size()-2]);
   pcl::io::savePCDFileASCII ("testlast.pcd", *symmetry_clouds[symmetry_clouds.size()-1]);
   
-  int lol = viewer_script(symmetry_clouds);
+  int lol = viewer_script(symmetry_clouds,cloud_angles);
   cout<<"-----------This is "<<lol<<endl;
 
   // Selecting which cloud to view and save
-  pcl::PointCloud<pcl::PointXYZ>::Ptr viewer_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-  int cloud_number=0;
-  cout<<"Enter the cloud number"<<endl;
-  cin>>cloud_number;
-  viewer_cloud = symmetry_clouds[cloud_number];
-  pcl::io::savePCDFileASCII ("special.pcd", *viewer_cloud);
+  // pcl::PointCloud<pcl::PointXYZ>::Ptr viewer_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+  // int cloud_number=0;
+  // cout<<"Enter the cloud number"<<endl;
+  // cin>>cloud_number;
+  // viewer_cloud = symmetry_clouds[cloud_number];
+  // pcl::io::savePCDFileASCII ("special.pcd", *viewer_cloud);
 
   //Visualisation of the cloud
   pcl::visualization::PCLVisualizer viewer ("Simple pointcloud display example");
@@ -358,7 +365,7 @@ int main (int argc, char** argv)
   pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> symmetry_clouds_color_handler3 (symmetry_clouds[3], 200, 200, 200); //         White
   pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> oriented_golden_color_handler (orientedGolden, 200, 200, 0); //           Orange
   pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> symmetry_clouds_color_handler21 (symmetry_clouds[21], 200, 200,200); // White
-  pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> symmetry_clouds_color_handlerl2 (viewer_cloud, 20, 255, 0); // Green
+  //pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> symmetry_clouds_color_handlerl2 (viewer_cloud, 20, 255, 0); // Green
   pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> symmetry_clouds_color_handlerl (symmetry_clouds[symmetry_clouds.size()-1], 20, 255, 0); // Green
   
   viewer.addPointCloud (symmetry_clouds[0], symmetry_clouds_color_handlertest, "original_cloud");
@@ -367,7 +374,7 @@ int main (int argc, char** argv)
 //   viewer.addPointCloud (symmetry_clouds[3], symmetry_clouds_color_handler3, "original4_cloud");
   viewer.addPointCloud (orientedGolden, oriented_golden_color_handler, "original4_cloud");
   //viewer.addPointCloud (symmetry_clouds[21], symmetry_clouds_color_handler21, "original3_cloud");
-  viewer.addPointCloud (viewer_cloud, symmetry_clouds_color_handlerl2, "original5_cloud");
+  //viewer.addPointCloud (viewer_cloud, symmetry_clouds_color_handlerl2, "original5_cloud");
   //viewer.addPointCloud (symmetry_clouds[symmetry_clouds.size()-1], symmetry_clouds_color_handlerl, "original4_cloud");
   // viewer.addPointCloudNormals<pcl::PointXYZ, pcl::Normal> (cloud, cloud_normals, 10, 0.05, "normals");
   viewer.addCoordinateSystem (0.5, "cloud", 0);
@@ -375,16 +382,11 @@ int main (int argc, char** argv)
   // viewer.addSphere(coeff);
   viewer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "original_cloud");
   viewer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "original2_cloud");
-  viewer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "original5_cloud");
+  //viewer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "original5_cloud");
   viewer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "original4_cloud");
 
   while (!viewer.wasStopped ()) { // Display the visualiser until 'q' key is pressed
     viewer.spinOnce (1); 
-    // for(int i=5;i<35;i++){
-    //     viewer_cloud = symmetry_clouds[i];
-    //     viewer.updatePointCloud(viewer_cloud,"original5_cloud");
-    // }
-    
   }
   
   return (0);
