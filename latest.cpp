@@ -17,13 +17,16 @@
 std::string path= "/home/pinak/PCL/PCD/";
 
 int viewer_script (std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> simulation_clouds, 
-pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_projected ,pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_projected_y)
+pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_projected ,pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_projected_y,
+pcl::ModelCoefficients::Ptr coefficients, pcl::ModelCoefficients::Ptr coefficients2)
 {
 int i =0;
   
     pcl::PointCloud<pcl::PointXYZ>::Ptr ref (new pcl::PointCloud<pcl::PointXYZ>);
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
     pcl::PointCloud<pcl::PointXYZ>::Ptr offsetcloud (new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr off_cloud_proj (new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr off_cloud_proj_x (new pcl::PointCloud<pcl::PointXYZ>);
     
     // Reading stored pointcloud of pointXYZ in cloud variable
     if (pcl::io::loadPCDFile<pcl::PointXYZ> (path+"testout.pcd", *ref) == -1) //* load the file
@@ -44,11 +47,15 @@ int i =0;
     pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> source_cloud_color_handler4 (offsetcloud, 10, 255, 20);
     pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> proj_cloud_color_handler (cloud_projected, 200, 200, 20);
     pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> projy_cloud_color_handler (cloud_projected_y, 55, 155, 120);
+    pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> off_proj_cloud_color_handler (off_cloud_proj, 200, 200, 200);
+    pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> off_projx_cloud_color_handler (off_cloud_proj_x, 15, 15, 220);
     viewer.addPointCloud (cloud, source_cloud_color_handler, "original_cloud");
     viewer.addPointCloud (ref, ref_cloud_color_handler, "ref_cloud");
     viewer.addPointCloud (offsetcloud, source_cloud_color_handler4, "original4_cloud");
     viewer.addPointCloud (cloud_projected, proj_cloud_color_handler, "proj_cloud");
     viewer.addPointCloud (cloud_projected_y, projy_cloud_color_handler, "projy_cloud");
+    viewer.addPointCloud (off_cloud_proj, off_proj_cloud_color_handler, "off_proj_cloud");
+    viewer.addPointCloud (off_cloud_proj_x, off_projx_cloud_color_handler, "off_projx_cloud");
     // viewer.addPointCloudNormals<pcl::PointXYZ, pcl::Normal> (cloud, cloud_normals, 10, 0.05, "normals");
     viewer.addCoordinateSystem (0.5, "cloud", 0);
     viewer.setBackgroundColor(0.05, 0.05, 0.05, 0); // Setting background to a dark grey
@@ -58,6 +65,8 @@ int i =0;
     viewer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "original4_cloud");
     viewer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "proj_cloud");
     viewer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "projy_cloud");
+    viewer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "off_proj_cloud");
+    viewer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "off_projx_cloud");
     
     int count=0;
     float offset = 0;
@@ -68,6 +77,20 @@ int i =0;
             offsetcloud = simulation_clouds[i];
             cout<<"PCD"+std::to_string(i)<<endl;
             viewer.updatePointCloud(offsetcloud,"original4_cloud");
+            pcl::ProjectInliers<pcl::PointXYZ> off_proj;
+            off_proj.setModelType (pcl::SACMODEL_PLANE);
+            off_proj.setInputCloud (offsetcloud);
+            off_proj.setModelCoefficients (coefficients);
+            off_proj.filter (*off_cloud_proj);
+            // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            viewer.updatePointCloud(off_cloud_proj,"off_proj_cloud");
+
+            pcl::ProjectInliers<pcl::PointXYZ> off_proj_x;
+            off_proj_x.setModelType (pcl::SACMODEL_PLANE);
+            off_proj_x.setInputCloud (offsetcloud);
+            off_proj_x.setModelCoefficients (coefficients2);
+            off_proj_x.filter (*off_cloud_proj_x);
+            viewer.updatePointCloud(off_cloud_proj_x,"off_projx_cloud");
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
             i++;
         }
@@ -347,7 +370,7 @@ int main (int argc, char** argv)
   pcl::io::savePCDFileASCII (path+"testlast2.pcd", *symmetry_clouds[symmetry_clouds.size()-2]);
   pcl::io::savePCDFileASCII (path+"testlast.pcd", *symmetry_clouds[symmetry_clouds.size()-1]);
   
-  int lol = viewer_script(symmetry_clouds,cloud_projected,cloud_projected_y);
+  int lol = viewer_script(symmetry_clouds,cloud_projected,cloud_projected_y,coefficients,coefficients2);
   cout<<"-----------This is "<<lol<<endl;
   
 // ----------------------------------------------------------------------------------------------------------------
