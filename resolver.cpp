@@ -207,7 +207,7 @@ int main (int argc, char** argv)
     cout<<"MAX_y:"<<max_y<<endl;
     cout<<"MAX_x2:"<<max_x2<<endl;
   
-  pcl::PointCloud<pcl::PointXYZ>::Ptr offsetcloud(new pcl::PointCloud<pcl::PointXYZ>);
+  
   pcl::PointCloud<pcl::PointXYZ>::Ptr rot_cloud_projected (new pcl::PointCloud<pcl::PointXYZ>);
   pcl::PointCloud<pcl::PointXYZ>::Ptr rot_cloud_projected_y (new pcl::PointCloud<pcl::PointXYZ>);
   
@@ -224,32 +224,58 @@ int main (int argc, char** argv)
         max_offset = max_z-min_z;
     }
   theta = 0;//-1*((20*M_PI)/180);
-  Eigen::Affine3f transform2 = Eigen::Affine3f::Identity();
-  transform2.translation()<<0,0,0;
   symmetry_clouds.push_back(outputpcl);
-
-  // Works when having different point clouds
-  if(count==0){
-    transform2.rotate (Eigen::AngleAxisf ((-20*(M_PI/180)), Eigen::Vector3f::UnitY()));
-    pcl::transformPointCloud(*outputpcl, *offsetcloud, transform2);
-    cout<<"first"<<endl; 
-    std::cout << transform2.matrix() << std::endl;
-    symmetry_clouds.push_back(offsetcloud);
-    count++;
-  }
- //Main loop
-  while(count<=40){
-    Eigen::Affine3f transform3 = Eigen::Affine3f::Identity();
-    transform3.translation()<<0,0,0;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr temp_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-    transform3.rotate (Eigen::AngleAxisf (count*(M_PI/180), Eigen::Vector3f::UnitY())); 
-    //Continues rotation from previous value of -20, values are added
-    pcl::transformPointCloud(*offsetcloud, *temp_cloud, transform3);
-    std::cout << transform3.matrix() << std::endl;
-    //if(count==1)
-    symmetry_clouds.push_back(temp_cloud);
+  
+  int i = 0;
+  while(i<2)
+  {
+    count =0;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr transfercloud(new pcl::PointCloud<pcl::PointXYZ>);
+    // Works when having different point clouds
+    if(count==0){
+      Eigen::Affine3f transform2 = Eigen::Affine3f::Identity();
+      transform2.translation()<<0,0,0;
+      pcl::PointCloud<pcl::PointXYZ>::Ptr offsetcloud(new pcl::PointCloud<pcl::PointXYZ>);
+      transform2.rotate (Eigen::AngleAxisf ((-20*(M_PI/180)), Eigen::Vector3f::UnitY()));
+      pcl::transformPointCloud(*outputpcl, *offsetcloud, transform2);
+      cout<<"first point of rotation"<<endl; 
+      std::cout << transform2.matrix() << std::endl;
+      symmetry_clouds.push_back(offsetcloud);
+      transfercloud = offsetcloud;
+      count++;
+    }
+    //Main loop, rotates cloud from -20 to +20
+    while(count<=40){
+      int j=0;
+      Eigen::Affine3f transform3 = Eigen::Affine3f::Identity();
+      transform3.translation()<<0,0,0;
+      pcl::PointCloud<pcl::PointXYZ>::Ptr temp_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+      transform3.rotate (Eigen::AngleAxisf (count*(M_PI/180), Eigen::Vector3f::UnitY())); 
+      //Continues rotation from previous value of -20, values are added of increasing degrees 1,2,3..
+      pcl::transformPointCloud(*transfercloud, *temp_cloud, transform3);
+      std::cout << transform3.matrix() << std::endl;
+      //if(count==1)
+      symmetry_clouds.push_back(temp_cloud);
+      cout<<count<<" size"<<symmetry_clouds.size()<<endl;
+      count++;
+    }
+    // Performs translation based on the step size and updates outputpcl
+    Eigen::Affine3f transform4 = Eigen::Affine3f::Identity();
+    transform4.translation()<<0,0,0.01;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr trans_temp_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::transformPointCloud(*outputpcl, *trans_temp_cloud, transform4);
+    pcl::io::savePCDFileASCII ("beforeT", *outputpcl);
+    outputpcl = trans_temp_cloud;  // Under Scrutiny
+    pcl::io::savePCDFileASCII ("afterT", *outputpcl);
+    symmetry_clouds.push_back(outputpcl);
     cout<<count<<" size"<<symmetry_clouds.size()<<endl;
-    count++;
+    
+    //Testing -20 of translated cloud
+    if(i==0){
+
+    }
+
+    i++;
   }
 //   transform2.rotate (Eigen::AngleAxisf (0, Eigen::Vector3f::UnitY())); 
 //   transform2.translation()<<0,0,0.001;
@@ -265,6 +291,8 @@ int main (int argc, char** argv)
   pcl::io::savePCDFileASCII ("test3.pcd", *symmetry_clouds[3]); // -18 offsetcloud2 same clouds failing, first value of -19 stored
   pcl::io::savePCDFileASCII ("test4.pcd", *symmetry_clouds[4]); // -17 offsetcloud2 same clouds failing
   pcl::io::savePCDFileASCII ("test21.pcd", *symmetry_clouds[21]); // 0 test21 and test1 are similar (only last 3 digits change)
+  pcl::io::savePCDFileASCII ("test42.pcd", *symmetry_clouds[42]); 
+  pcl::io::savePCDFileASCII ("test43.pcd", *symmetry_clouds[43]); 
   pcl::io::savePCDFileASCII ("testlast2.pcd", *symmetry_clouds[symmetry_clouds.size()-2]);
   pcl::io::savePCDFileASCII ("testlast.pcd", *symmetry_clouds[symmetry_clouds.size()-1]);
   
@@ -273,6 +301,7 @@ int main (int argc, char** argv)
   cout<<"Enter the cloud number"<<endl;
   cin>>cloud_number;
   viewer_cloud = symmetry_clouds[cloud_number];
+  pcl::io::savePCDFileASCII ("special.pcd", *viewer_cloud);
   //Visualisation of the cloud
   pcl::visualization::PCLVisualizer viewer ("Simple pointcloud display example");
   pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> symmetry_clouds_color_handlertest (symmetry_clouds[0], 255, 20, 25); //Red
