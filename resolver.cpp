@@ -206,47 +206,17 @@ int main (int argc, char** argv)
     cout<<"MAX_x:"<<max_x<<endl;
     cout<<"MAX_y:"<<max_y<<endl;
     cout<<"MAX_x2:"<<max_x2<<endl;
-
   
-  
-
-  //offsetclouds.push_back(new pcl::PointCloud<pcl::PointXYZ>);
-  std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> symmetry_clouds;
   pcl::PointCloud<pcl::PointXYZ>::Ptr offsetcloud(new pcl::PointCloud<pcl::PointXYZ>);
-  
   pcl::PointCloud<pcl::PointXYZ>::Ptr rot_cloud_projected (new pcl::PointCloud<pcl::PointXYZ>);
   pcl::PointCloud<pcl::PointXYZ>::Ptr rot_cloud_projected_y (new pcl::PointCloud<pcl::PointXYZ>);
-  //Visualisation of the cloud
-  pcl::visualization::PCLVisualizer viewer ("Simple pointcloud display example");
-  pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> source_cloud_color_handler (cloud, 255, 20, 25); //Red
-  pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> source_cloud_color_handler2 (orientedGolden, 20, 20, 255); //Blue
-  pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> source_cloud_color_handler3 (outputpcl, 20, 255, 20); //Green
-  pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> source_cloud_color_handler4 (offsetcloud, 200, 200, 200); // White
-  pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> source_cloud_projected (cloud_projected, 200, 200, 0); // Orange
-  pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> source_cloud_projected_x (cloud_projected_y, 100, 100, 0); // Orange
-  pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> source_cloud_rot_projected (rot_cloud_projected, 200, 0, 100); // RedBlue
-  pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> source_cloud_rot_projected_x (rot_cloud_projected_y, 100, 0, 100); // RedBlue
-  viewer.addPointCloud (cloud, source_cloud_color_handler, "original_cloud");
-  viewer.addPointCloud (orientedGolden, source_cloud_color_handler2, "original2_cloud");
-  viewer.addPointCloud (outputpcl, source_cloud_color_handler3, "original3_cloud");
-  viewer.addPointCloud (offsetcloud, source_cloud_color_handler4, "original4_cloud");
-  viewer.addPointCloud (cloud_projected, source_cloud_projected, "projected_cloud");
-  viewer.addPointCloud (cloud_projected_y, source_cloud_projected_x, "projected_cloud_y");
-  viewer.addPointCloud (rot_cloud_projected, source_cloud_rot_projected, "rot_projected_cloud");
-  viewer.addPointCloud (rot_cloud_projected_y, source_cloud_rot_projected_x, "rot_projected_cloud_y");
-  // viewer.addPointCloudNormals<pcl::PointXYZ, pcl::Normal> (cloud, cloud_normals, 10, 0.05, "normals");
-  viewer.addCoordinateSystem (0.5, "cloud", 0);
-  viewer.setBackgroundColor(0.05, 0.05, 0.05, 0); // Setting background to a dark grey
-  // viewer.addSphere(coeff);
-  viewer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "original_cloud");
-  viewer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "original2_cloud");
-  viewer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "original3_cloud");
-  viewer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "original4_cloud");
-
+  
   // Logic for translation and rotation of selected axis
   int count=0;
   float offset = 0;
   float max_offset = 0;
+  
+  std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> symmetry_clouds; //Storage for all clouds
   
   if (max_z2>max_z)
         max_offset = (-(max_z-min_z));
@@ -269,11 +239,13 @@ int main (int argc, char** argv)
   }
  //Main loop
   while(count<=40){
+    Eigen::Affine3f transform3 = Eigen::Affine3f::Identity();
+    transform3.translation()<<0,0,0;
     pcl::PointCloud<pcl::PointXYZ>::Ptr temp_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-    transform2.rotate (Eigen::AngleAxisf ((M_PI/180), Eigen::Vector3f::UnitY())); 
+    transform3.rotate (Eigen::AngleAxisf (count*(M_PI/180), Eigen::Vector3f::UnitY())); 
     //Continues rotation from previous value of -20, values are added
-    pcl::transformPointCloud(*offsetcloud, *temp_cloud, transform2);
-    std::cout << transform2.matrix() << std::endl;
+    pcl::transformPointCloud(*offsetcloud, *temp_cloud, transform3);
+    std::cout << transform3.matrix() << std::endl;
     //if(count==1)
     symmetry_clouds.push_back(temp_cloud);
     cout<<count<<" size"<<symmetry_clouds.size()<<endl;
@@ -287,12 +259,56 @@ int main (int argc, char** argv)
 //   symmetry_clouds.push_back(offsetcloud);
 
 
-  pcl::io::savePCDFileASCII ("test0.pcd", *symmetry_clouds[0]); //outputpcl different clouds working
+  pcl::io::savePCDFileASCII ("testout.pcd", *symmetry_clouds[0]); //outputpcl different clouds working
   pcl::io::savePCDFileASCII ("test1.pcd", *symmetry_clouds[1]); //-20 offsetcloud1 different clouds working
   pcl::io::savePCDFileASCII ("test2.pcd", *symmetry_clouds[2]); // -19 offsetcloud2 different clouds working
   pcl::io::savePCDFileASCII ("test3.pcd", *symmetry_clouds[3]); // -18 offsetcloud2 same clouds failing, first value of -19 stored
   pcl::io::savePCDFileASCII ("test4.pcd", *symmetry_clouds[4]); // -17 offsetcloud2 same clouds failing
-  pcl::io::savePCDFileASCII ("testlast.pcd", *symmetry_clouds[symmetry_clouds.size()-2]);
-  pcl::io::savePCDFileASCII ("testtranslate.pcd", *symmetry_clouds[symmetry_clouds.size()-1]);
+  pcl::io::savePCDFileASCII ("test21.pcd", *symmetry_clouds[21]); // 0 test21 and test1 are similar (only last 3 digits change)
+  pcl::io::savePCDFileASCII ("testlast2.pcd", *symmetry_clouds[symmetry_clouds.size()-2]);
+  pcl::io::savePCDFileASCII ("testlast.pcd", *symmetry_clouds[symmetry_clouds.size()-1]);
+  
+  pcl::PointCloud<pcl::PointXYZ>::Ptr viewer_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+  int cloud_number=0;
+  cout<<"Enter the cloud number"<<endl;
+  cin>>cloud_number;
+  viewer_cloud = symmetry_clouds[cloud_number];
+  //Visualisation of the cloud
+  pcl::visualization::PCLVisualizer viewer ("Simple pointcloud display example");
+  pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> symmetry_clouds_color_handlertest (symmetry_clouds[0], 255, 20, 25); //Red
+  pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> symmetry_clouds_color_handler1 (symmetry_clouds[1], 20, 20, 255); //Blue
+  pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> symmetry_clouds_color_handler2 (symmetry_clouds[2], 20, 255, 20); //           Green
+  pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> symmetry_clouds_color_handler3 (symmetry_clouds[3], 200, 200, 200); //         White
+  pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> symmetry_clouds_color_handler4 (symmetry_clouds[4], 200, 200, 0); //           Orange
+  pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> symmetry_clouds_color_handler21 (symmetry_clouds[21], 200, 200,200); // White
+  pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> symmetry_clouds_color_handlerl2 (viewer_cloud, 20, 255, 0); // Green
+  pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> symmetry_clouds_color_handlerl (symmetry_clouds[symmetry_clouds.size()-1], 20, 255, 0); // Green
+  
+  viewer.addPointCloud (symmetry_clouds[0], symmetry_clouds_color_handlertest, "original_cloud");
+  viewer.addPointCloud (symmetry_clouds[1], symmetry_clouds_color_handler1, "original2_cloud");
+//   viewer.addPointCloud (symmetry_clouds[2], symmetry_clouds_color_handler2, "original3_cloud");
+//   viewer.addPointCloud (symmetry_clouds[3], symmetry_clouds_color_handler3, "original4_cloud");
+//   viewer.addPointCloud (symmetry_clouds[4], symmetry_clouds_color_handler4, "projected_cloud");
+  //viewer.addPointCloud (symmetry_clouds[21], symmetry_clouds_color_handler21, "original3_cloud");
+  viewer.addPointCloud (viewer_cloud, symmetry_clouds_color_handlerl2, "original5_cloud");
+  //viewer.addPointCloud (symmetry_clouds[symmetry_clouds.size()-1], symmetry_clouds_color_handlerl, "original4_cloud");
+  // viewer.addPointCloudNormals<pcl::PointXYZ, pcl::Normal> (cloud, cloud_normals, 10, 0.05, "normals");
+  viewer.addCoordinateSystem (0.5, "cloud", 0);
+  viewer.setBackgroundColor(0.05, 0.05, 0.05, 0); // Setting background to a dark grey
+  // viewer.addSphere(coeff);
+  viewer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "original_cloud");
+  viewer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "original2_cloud");
+  viewer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "original5_cloud");
+  //viewer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "original4_cloud");
+
+  while (!viewer.wasStopped ()) { // Display the visualiser until 'q' key is pressed
+    viewer.spinOnce (1); 
+    // for(int i=5;i<35;i++){
+    //     viewer_cloud = symmetry_clouds[i];
+    //     viewer.updatePointCloud(viewer_cloud,"original5_cloud");
+    // }
+    
+  }
+  
   return (0);
 }
