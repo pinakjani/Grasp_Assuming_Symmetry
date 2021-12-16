@@ -19,14 +19,13 @@ std::string path= "/home/wael/dr_project/Grasp_Assuming_Symmetry/build/";
 int viewer_script (std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> simulation_clouds, std::vector<int> angles)
 {
 int i =0;
-std::string path= "/home/pinak/PCL/PCD/test";
   
     pcl::PointCloud<pcl::PointXYZ>::Ptr ref (new pcl::PointCloud<pcl::PointXYZ>);
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
     pcl::PointCloud<pcl::PointXYZ>::Ptr offsetcloud (new pcl::PointCloud<pcl::PointXYZ>);
     
     // Reading stored pointcloud of pointXYZ in cloud variable
-    if (pcl::io::loadPCDFile<pcl::PointXYZ> ("/home/wael/dr_project/Grasp_Assuming_Symmetry/build/testout.pcd", *ref) == -1) //* load the file
+    if (pcl::io::loadPCDFile<pcl::PointXYZ> (path+"oriented.pcd", *ref) == -1) //* load the file
     {
         PCL_ERROR ("Couldn't read file test3.pcd \n");
         return (-1);
@@ -129,7 +128,7 @@ cout<<"Size:"<<angle.size()<<" "<<simulation_clouds.size()<<endl;
     pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> proj_cloud_color_handler (cloud_projected, 200, 200, 20);
     pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> projy_cloud_color_handler (cloud_projected_y, 55, 155, 120);
     pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> off_proj_cloud_color_handler (off_cloud_proj, 200, 200, 200);
-    pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> off_projy_cloud_color_handler (off_cloud_proj_y, 15, 15, 220);
+    pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> off_projy_cloud_color_handler (off_cloud_proj_y, 200, 200, 220);
     viewer.addPointCloud (cloud, source_cloud_color_handler, "original_cloud");
     viewer.addPointCloud (ref, ref_cloud_color_handler, "ref_cloud");
     viewer.addPointCloud (offsetcloud, source_cloud_color_handler4, "original4_cloud");
@@ -174,7 +173,7 @@ cout<<"Size:"<<angle.size()<<" "<<simulation_clouds.size()<<endl;
             off_proj_y.setInputCloud (offsetcloud);
             off_proj_y.setModelCoefficients (coefficients2);
             off_proj_y.filter (*off_cloud_proj_y);
-            viewer.updatePointCloud(off_cloud_proj_y,"off_projx_cloud");
+            viewer.updatePointCloud(off_cloud_proj_y,"off_projy_cloud");
 
             //-------------In projections, Calculating the max and min points in x,y and z directions------
             std::vector<float> off_proj_points = points(off_cloud_proj);
@@ -198,6 +197,7 @@ cout<<"Size:"<<angle.size()<<" "<<simulation_clouds.size()<<endl;
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
             i++;
         }
+
  }
 
 // Code to perform average of the good point clouds
@@ -435,7 +435,7 @@ int main (int argc, char** argv)
     }
   theta = 0; // Unused at the moment
   symmetry_clouds.push_back(outputpcl); // Storing the original rotated cloud in first place
- //pcl::io::savePCDFileASCII ("/home/pinak/PCL/oriented.pcd", *orientedGolden);
+  pcl::io::savePCDFileASCII (path+"oriented.pcd", *orientedGolden);
   cloud_angles.push_back(0);
 
   while(1)
