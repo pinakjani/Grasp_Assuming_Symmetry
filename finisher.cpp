@@ -31,6 +31,13 @@ int i =0;
         return (-1);
     }
 
+    // Reading stored pointcloud of pointXYZ in cloud variable
+    if (pcl::io::loadPCDFile<pcl::PointXYZ> (path+"cloudConsidered.pcd", *cloud) == -1) //* load the file
+    {
+        PCL_ERROR ("Couldn't read file test3.pcd \n");
+        return (-1);
+    }
+
     std::cout<<"Loaded "<<offsetcloud->width*offsetcloud->height<<"data points from test_pcd3.pcd"<< std::endl;
     pcl::visualization::PCLVisualizer viewer ("Simple pointcloud display example");
     pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> ref_cloud_color_handler (ref, 255, 25, 255);
@@ -95,13 +102,14 @@ std::vector<float> points(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud){
 
 int brute_script (std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> simulation_clouds,
 std::vector<int> angle, pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_projected ,pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_projected_y,
-pcl::ModelCoefficients::Ptr coefficients, pcl::ModelCoefficients::Ptr coefficients2)
+pcl::ModelCoefficients::Ptr coefficients, pcl::ModelCoefficients::Ptr coefficients2, Eigen::Matrix4f backTransform)
 {
 int i =0;
 cout<<"Size:"<<angle.size()<<" "<<simulation_clouds.size()<<endl;
     std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> good_clouds;
     std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> final_single_cloud;
     std::vector<int> good_angle;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr reflectedBack (new pcl::PointCloud<pcl::PointXYZ>);
     pcl::PointCloud<pcl::PointXYZ>::Ptr ref (new pcl::PointCloud<pcl::PointXYZ>);
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
     pcl::PointCloud<pcl::PointXYZ>::Ptr offsetcloud (new pcl::PointCloud<pcl::PointXYZ>);
@@ -109,12 +117,12 @@ cout<<"Size:"<<angle.size()<<" "<<simulation_clouds.size()<<endl;
     pcl::PointCloud<pcl::PointXYZ>::Ptr off_cloud_proj_y (new pcl::PointCloud<pcl::PointXYZ>);
     
     // Reading stored pointcloud of pointXYZ in cloud variable
-    if (pcl::io::loadPCDFile<pcl::PointXYZ> (path+"testout.pcd", *ref) == -1) //* load the file
+    if (pcl::io::loadPCDFile<pcl::PointXYZ> (path+"oriented.pcd", *ref) == -1) //* load the file
     {
         PCL_ERROR ("Couldn't read file test3.pcd \n");
         return (-1);
     }
-    if (pcl::io::loadPCDFile<pcl::PointXYZ> ("/home/wael/dr_project/Grasp_Assuming_Symmetry/test_pcd.pcd", *cloud) == -1) //* load the file
+    if (pcl::io::loadPCDFile<pcl::PointXYZ> (path+"testout.pcd", *cloud) == -1) //* load the file
     {
         PCL_ERROR ("Couldn't read file test3.pcd \n");
         return (-1);
@@ -219,15 +227,18 @@ for(int i=0;i<final->points.size();i++) {
     final->points[i].y = final->points[i].y/good_clouds.size();
     final->points[i].z = final->points[i].z/good_clouds.size();
 }
-final_single_cloud.push_back(final);
 
+pcl::transformPointCloud(*final, *reflectedBack, backTransform);
+final_single_cloud.push_back(reflectedBack);
 // Displaying the single average good cloud
 int lols2 = viewer_script(final_single_cloud,good_angle);
 cout<<"We got back "<<lols2<<endl;
 
+
+
 // Displaying all the good clouds
-int lols3 = viewer_script(good_clouds,good_angle);
-cout<<"We got back "<<lols3<<endl;
+// int lols3 = viewer_script(good_clouds,good_angle);
+// cout<<"We got back "<<lols3<<endl;
 
 return good_clouds.size();
 }
@@ -437,6 +448,7 @@ int main (int argc, char** argv)
   theta = 0; // Unused at the moment
   symmetry_clouds.push_back(outputpcl); // Storing the original rotated cloud in first place
   pcl::io::savePCDFileASCII (path+"oriented.pcd", *orientedGolden);
+  pcl::io::savePCDFileASCII (path+"cloudConsidered.pcd", *cloud);
   cloud_angles.push_back(0);
 
   while(1)
@@ -507,7 +519,7 @@ int main (int argc, char** argv)
   pcl::io::savePCDFileASCII (path+"testlast2.pcd", *symmetry_clouds[symmetry_clouds.size()-2]);
   pcl::io::savePCDFileASCII (path+"testlast.pcd", *symmetry_clouds[symmetry_clouds.size()-1]);
   
-  int lol = brute_script(symmetry_clouds,cloud_angles, cloud_projected,cloud_projected_y,coefficients,coefficients2);
+  int lol = brute_script(symmetry_clouds,cloud_angles, cloud_projected,cloud_projected_y,coefficients,coefficients2, goldenTransform);
   cout<<"-----------This is it--------------"<<lol<<endl;
  return(0);
 } 
