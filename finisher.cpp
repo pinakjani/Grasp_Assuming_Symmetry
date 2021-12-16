@@ -137,7 +137,8 @@ cout<<"Size:"<<angle.size()<<" "<<simulation_clouds.size()<<endl;
             // }
 
             //-------------Wael's Conditions for good pointclouds---------------
-            if((off_proj_points[1]<=proj_points[1]) && (off_proj_points[0]>=proj_points[0])){
+            if((off_proj_points[1]>=proj_points[1]) && (off_proj_points[0]<=proj_points[0])
+            && abs(off_proj_points[3]-proj_points[3])<0.01 && abs(off_proj_points[2]-proj_points[2])<0.01 ){
               cout<<"found"<<endl; 
               good_clouds.push_back(offsetcloud);
               good_angle.push_back(angle[i]);
@@ -374,7 +375,7 @@ int main (int argc, char** argv)
     // Works when having different point clouds
     if(count==0){
       Eigen::Affine3f transform2 = Eigen::Affine3f::Identity();
-      transform2.translation()<<0,0,0;
+      transform2.translation()<<0,-1*(max_y2-max_y),0;
       pcl::PointCloud<pcl::PointXYZ>::Ptr offsetcloud(new pcl::PointCloud<pcl::PointXYZ>);
       transform2.rotate (Eigen::AngleAxisf ((-20*(M_PI/180)), Eigen::Vector3f::UnitY()));
       pcl::transformPointCloud(*outputpcl, *offsetcloud, transform2);
@@ -389,7 +390,7 @@ int main (int argc, char** argv)
     while(count<=40){
       int j=0;
       Eigen::Affine3f transform3 = Eigen::Affine3f::Identity();
-      transform3.translation()<<0,0,0;
+      transform3.translation()<<0,-1*(max_y2-max_y),0;
       pcl::PointCloud<pcl::PointXYZ>::Ptr temp_cloud(new pcl::PointCloud<pcl::PointXYZ>);
       transform3.rotate (Eigen::AngleAxisf (count*(M_PI/180), Eigen::Vector3f::UnitY())); 
       //Continues rotation from previous value of -20, values are added of increasing degrees 1,2,3..
