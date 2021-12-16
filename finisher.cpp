@@ -189,7 +189,8 @@ cout<<"Size:"<<angle.size()<<" "<<simulation_clouds.size()<<endl;
 
             //-------------Wael's Conditions for good pointclouds---------------
             if((off_proj_points[1]>=proj_points[1]) && (off_proj_points[0]<=proj_points[0])
-            && abs(off_proj_points[3]-proj_points[3])<0.01 && abs(off_proj_points[2]-proj_points[2])<0.01 ){
+            && abs(off_proj_points[3]-proj_points[3])<0.01 && abs(off_proj_points[2]-proj_points[2])<0.01
+            && (off_projy_points[5]>=projy_points[5]) ){
               cout<<"found"<<endl; 
               good_clouds.push_back(offsetcloud);
               good_angle.push_back(angle[i]);
