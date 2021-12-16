@@ -25,11 +25,11 @@ int i =0;
     pcl::PointCloud<pcl::PointXYZ>::Ptr offsetcloud (new pcl::PointCloud<pcl::PointXYZ>);
     
     // Reading stored pointcloud of pointXYZ in cloud variable
-    if (pcl::io::loadPCDFile<pcl::PointXYZ> (path+"oriented.pcd", *ref) == -1) //* load the file
-    {
-        PCL_ERROR ("Couldn't read file test3.pcd \n");
-        return (-1);
-    }
+    // if (pcl::io::loadPCDFile<pcl::PointXYZ> (path+"oriented.pcd", *ref) == -1) //* load the file
+    // {
+    //     PCL_ERROR ("Couldn't read file test3.pcd \n");
+    //     return (-1);
+    // }
 
     // Reading stored pointcloud of pointXYZ in cloud variable
     if (pcl::io::loadPCDFile<pcl::PointXYZ> (path+"cloudConsidered.pcd", *cloud) == -1) //* load the file
@@ -67,6 +67,12 @@ int i =0;
             i++;
         } else{
           //return (0);
+            *cloud += *offsetcloud;  // Concatenating the two point clouds
+            cout<<"Enter the name of the completed PCD"<<endl;
+            std::string name;
+            cin>>name;
+            pcl::io::savePCDFileASCII ("/home/wael/dr_project/Grasp_Assuming_Symmetry/completedClouds/"+name+"_pcd.pcd",*cloud );
+            return(0);
         }
 
  }
