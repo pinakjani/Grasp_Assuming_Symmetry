@@ -57,10 +57,10 @@ std::string path= "/home/pinak/PCL/PCD/test";
             offsetcloud = simulation_clouds[i];
             cout<<"PCD "+std::to_string(i)<<" has angle "<<angles[i]<<endl;
             viewer.updatePointCloud(offsetcloud,"original4_cloud");
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
             i++;
         } else{
-          return (0);
+          //return (0);
         }
 
  }
@@ -101,6 +101,7 @@ pcl::ModelCoefficients::Ptr coefficients, pcl::ModelCoefficients::Ptr coefficien
 int i =0;
 cout<<"Size:"<<angle.size()<<" "<<simulation_clouds.size()<<endl;
     std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> good_clouds;
+    std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> final_single_cloud;
     std::vector<int> good_angle;
     pcl::PointCloud<pcl::PointXYZ>::Ptr ref (new pcl::PointCloud<pcl::PointXYZ>);
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
@@ -198,8 +199,35 @@ cout<<"Size:"<<angle.size()<<" "<<simulation_clouds.size()<<endl;
             i++;
         }
  }
-int lols2 = viewer_script(good_clouds,good_angle);
+
+// Code to perform average of the good point clouds
+pcl::PointCloud<pcl::PointXYZ>::Ptr final (new pcl::PointCloud<pcl::PointXYZ>);
+final = good_clouds[0];
+for(int i=1;i<good_clouds.size();i++){   
+    //cout<<"Entered loop "<<i<<endl;
+    for(int j=0;j<good_clouds[i]->points.size();j++){
+        //cout<<"Working maybe? "<<j<<endl;
+        final->points[j].x += good_clouds[i]->points[j].x;
+        final->points[j].y += good_clouds[i]->points[j].y;
+        final->points[j].z += good_clouds[i]->points[j].z;
+    }
+}
+cout<<"Survived additions"<<endl;
+for(int i=0;i<final->points.size();i++) {
+    final->points[i].x = final->points[i].x/good_clouds.size();
+    final->points[i].y = final->points[i].y/good_clouds.size();
+    final->points[i].z = final->points[i].z/good_clouds.size();
+}
+final_single_cloud.push_back(final);
+
+// Displaying the single average good cloud
+int lols2 = viewer_script(final_single_cloud,good_angle);
 cout<<"We got back "<<lols2<<endl;
+
+// Displaying all the good clouds
+int lols3 = viewer_script(good_clouds,good_angle);
+cout<<"We got back "<<lols3<<endl;
+
 return good_clouds.size();
 }
 
